@@ -104,7 +104,10 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string) {
 		if command.Annotations["crescendoFlags"] != "" {
 			cresDef.OriginalCommandElements = append(cresDef.OriginalCommandElements, command.Annotations["crescendoFlags"])
 		}
-		filePath := "./crescendo/json/" + fileName + ".json"
+		if !strings.HasSuffix(path, "/") {
+			path += "/"
+		}
+		filePath := path + fileName + ".json"
 		file, _ := json.MarshalIndent(cresDef, "", "\t")
 		_ = ioutil.WriteFile(filePath, file, 0644)
 	}
