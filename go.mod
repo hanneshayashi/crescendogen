@@ -1,4 +1,4 @@
-module crescengo
+module github.com/hanneshayashi/crescengo
 
 go 1.15
 
