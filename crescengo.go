@@ -25,6 +25,7 @@ type Parameter struct {
 	OriginalName  string `json:"OriginalName,omitempty"`
 	ParameterType string `json:"ParameterType,omitempty"`
 	Description   string `json:"Description,omitempty"`
+	Mandatory     bool   `json:"Mandatory,omitempty"`
 }
 
 // CrescendoDef represents a single function definition for Crescendo
@@ -97,6 +98,10 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string) {
 				p.ParameterType = "switch"
 			default:
 				p.ParameterType = "string"
+			}
+			required, ok := f.Annotations[cobra.BashCompOneRequiredFlag]
+			if ok && required[0] == "true" {
+				p.Mandatory = true
 			}
 			cresDef.Parameters = append(cresDef.Parameters, p)
 		})
