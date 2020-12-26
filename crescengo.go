@@ -77,7 +77,7 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 		if command.Annotations["crescendoOutput"] != "" {
 			cresDef.OutputHandlers[0].Handler = command.Annotations["crescendoOutput"]
 		} else {
-			cresDef.OutputHandlers[0].Handler = "{ $_ | ConvertFrom-Json }"
+			cresDef.OutputHandlers[0].Handler = "$_ | ConvertFrom-Json"
 		}
 		if command.Annotations["crescendoAttachToParent"] == "true" {
 			cresDef.Verb = capFirstLetter(command.Parent().Use)
@@ -86,10 +86,14 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			cresDef.Verb = capFirstLetter(command.Use)
 			cresDef.Noun = capFirstLetter(command.Parent().Use)
 		}
-		command.Flags().VisitAll(func(f *pflag.Flag) {
+		foo := func(f *pflag.Flag) {
+			originalName := "--" + f.Name
+			if contains(originalName, defaultFlags) {
+				return
+			}
 			p := Parameter{
 				Name:         strings.ToUpper(string(f.Name[0])) + string(f.Name[1:]),
-				OriginalName: "--" + f.Name,
+				OriginalName: originalName,
 				Description:  f.Usage,
 			}
 			if contains(f.Name, psProtectedVariables) {
@@ -106,7 +110,9 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 				p.Mandatory = true
 			}
 			cresDef.Parameters = append(cresDef.Parameters, p)
-		})
+		}
+		command.Flags().VisitAll(foo)
+		command.Root().PersistentFlags().VisitAll(foo)
 		fileName := strings.Join(cresDef.OriginalCommandElements[:len(cresDef.OriginalCommandElements)-len(defaultFlags)], "_")
 		if command.Annotations["crescendoFlags"] != "" {
 			cresDef.OriginalCommandElements = append(cresDef.OriginalCommandElements, command.Annotations["crescendoFlags"])
