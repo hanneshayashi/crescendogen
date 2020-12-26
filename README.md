@@ -1,0 +1,2 @@
+This package is an example for how to generate definition files for [Crescendo](https://github.com/PowerShell/Crescendo).
+It was developed for [GSM](https://github.com/hanneshayashi/gsm), but should be easily adaptable for other cobra-based CLI tools.
