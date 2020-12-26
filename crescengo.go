@@ -17,6 +17,7 @@ var psProtectedVariables = []string{
 type OutputHandler struct {
 	ParameterSetName string `json:"ParameterSetName,omitempty"`
 	Handler          string `json:"Handler,omitempty"`
+	StreamOutput     bool   `json:"StreamOutput,omitempty"`
 }
 
 // Parameter represents a parameter definition for a PowerShell function in Crescendo format
@@ -55,27 +56,28 @@ func contains(s string, slice []string) bool {
 	return false
 }
 
-func createCrescendoModuleDefs(commands []*cobra.Command, root, path string) {
+func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, defaultFlags ...string) {
 	for _, command := range commands {
 		children := command.Commands()
 		if len(children) > 0 {
-			createCrescendoModuleDefs(children, root, path)
+			createCrescendoModuleDefs(children, root, path, defaultFlags...)
 		}
 		cresDef := CrescendoDef{
 			Schema:                  "./Microsoft.PowerShell.Crescendo.Schema.json",
 			Description:             command.Short,
 			OriginalName:            root,
-			OriginalCommandElements: append(strings.Split(command.CommandPath(), " ")[1:], "--compressOutput"),
+			OriginalCommandElements: append(strings.Split(command.CommandPath(), " ")[1:], defaultFlags...),
 			OutputHandlers: []OutputHandler{
 				{
 					ParameterSetName: "Default",
+					StreamOutput:     true,
 				},
 			},
 		}
 		if command.Annotations["crescendoOutput"] != "" {
 			cresDef.OutputHandlers[0].Handler = command.Annotations["crescendoOutput"]
 		} else {
-			cresDef.OutputHandlers[0].Handler = "$args[0] | ConvertFrom-Json"
+			cresDef.OutputHandlers[0].Handler = "{ $_ | ConvertFrom-Json }"
 		}
 		if command.Annotations["crescendoAttachToParent"] == "true" {
 			cresDef.Verb = capFirstLetter(command.Parent().Use)
@@ -105,7 +107,7 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string) {
 			}
 			cresDef.Parameters = append(cresDef.Parameters, p)
 		})
-		fileName := strings.Join(cresDef.OriginalCommandElements[:len(cresDef.OriginalCommandElements)-1], "_")
+		fileName := strings.Join(cresDef.OriginalCommandElements[:len(cresDef.OriginalCommandElements)-len(defaultFlags)], "_")
 		if command.Annotations["crescendoFlags"] != "" {
 			cresDef.OriginalCommandElements = append(cresDef.OriginalCommandElements, command.Annotations["crescendoFlags"])
 		}
@@ -120,12 +122,12 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string) {
 
 // CreateCrescendoModuleDefs creates module definitions in .json format for Microsoft Crescendo
 // https://github.com/PowerShell/Crescendo
-func CreateCrescendoModuleDefs(cmd *cobra.Command, path string) {
+func CreateCrescendoModuleDefs(cmd *cobra.Command, path string, defaultFlags ...string) {
 	commands := cmd.Commands()
 	for _, command := range commands {
 		children := command.Commands()
 		if len(children) > 0 {
-			createCrescendoModuleDefs(children, cmd.Use, path)
+			createCrescendoModuleDefs(children, cmd.Use, path, defaultFlags...)
 		}
 	}
 }
