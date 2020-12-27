@@ -70,7 +70,6 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			OutputHandlers: []OutputHandler{
 				{
 					ParameterSetName: "Default",
-					StreamOutput:     true,
 				},
 			},
 		}
@@ -78,6 +77,7 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			cresDef.OutputHandlers[0].Handler = command.Annotations["crescendoOutput"]
 		} else {
 			cresDef.OutputHandlers[0].Handler = "$_ | ConvertFrom-Json"
+			cresDef.OutputHandlers[0].StreamOutput = true
 		}
 		if command.Annotations["crescendoAttachToParent"] == "true" {
 			cresDef.Verb = capFirstLetter(command.Parent().Use)
