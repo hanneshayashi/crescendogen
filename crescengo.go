@@ -58,6 +58,9 @@ func contains(s string, slice []string) bool {
 
 func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, defaultFlags ...string) {
 	for _, command := range commands {
+		if command.Use == "help [command]" {
+			continue
+		}
 		children := command.Commands()
 		if len(children) > 0 {
 			createCrescendoModuleDefs(children, root, path, defaultFlags...)
@@ -87,6 +90,9 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			cresDef.Noun = capFirstLetter(command.Parent().Use)
 		}
 		foo := func(f *pflag.Flag) {
+			if f.Name == "help" {
+				return
+			}
 			originalName := "--" + f.Name
 			if contains(originalName, defaultFlags) {
 				return
@@ -112,7 +118,7 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			cresDef.Parameters = append(cresDef.Parameters, p)
 		}
 		command.Flags().VisitAll(foo)
-		command.Root().PersistentFlags().VisitAll(foo)
+		// command.Root().PersistentFlags().VisitAll(foo)
 		fileName := strings.Join(cresDef.OriginalCommandElements[:len(cresDef.OriginalCommandElements)-len(defaultFlags)], "_")
 		if command.Annotations["crescendoFlags"] != "" {
 			cresDef.OriginalCommandElements = append(cresDef.OriginalCommandElements, command.Annotations["crescendoFlags"])
