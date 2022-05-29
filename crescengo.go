@@ -118,7 +118,7 @@ func createCrescendoModuleDefs(commands []*cobra.Command, root, path string, def
 			cresDef.Parameters = append(cresDef.Parameters, p)
 		}
 		command.Flags().VisitAll(foo)
-		command.Root().PersistentFlags().VisitAll(foo)
+		// command.Root().PersistentFlags().VisitAll(foo)
 		fileName := strings.Join(cresDef.OriginalCommandElements[:len(cresDef.OriginalCommandElements)-len(defaultFlags)], "_")
 		if command.Annotations["crescendoFlags"] != "" {
 			cresDef.OriginalCommandElements = append(cresDef.OriginalCommandElements, command.Annotations["crescendoFlags"])
